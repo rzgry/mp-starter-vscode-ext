@@ -78,7 +78,7 @@ export async function generateProject(): Promise<void> {
       body: JSON.stringify(payload),
     };
 
-    // request-promise recommends to use the standard request library when streaming the response
+    // TODO: Move to streaming API so entire ZIP does not have to be loaded in memory.
     request(requestOptions, (err, body) => {
       console.log(body);
       if (!err) {
