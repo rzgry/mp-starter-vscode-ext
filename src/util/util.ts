@@ -1,4 +1,3 @@
-import * as vscode from "vscode";
 import {
 	OpenDialogOptions,
 	Uri,
@@ -20,36 +19,6 @@ export async function openDialogForFolder(customOptions: OpenDialogOptions): Pro
 	return undefined;
 }
 
-// export async function mapToPropertiesFile(arrayName: string, originalArray: string[]) {
-// 	let mappedArray: string[] = [];
-// 	mappedArray = originalArray.map(function (elem) {
-// 		return properties[arrayName][elem];
-// 	});
-// 	mappedArray.sort().reverse();
-// 	return mappedArray;
-// }
-
-function capitalizeFirstLetter(newString: string) {
+export function capitalizeFirstLetter(newString: string): string {
 	return newString.charAt(0).toUpperCase() + newString.slice(1);
 }
-
-export async function mapToDescription(prevArray: string[], descriptions: Record<string, any>) {
-	const specItems: vscode.QuickPickItem[] = [];
-	prevArray.forEach(element => {
-		const content = descriptions[element as keyof typeof descriptions];
-		const contentStr = new String(content);
-
-		const splits = contentStr.split(" - ");
-		specItems.push({
-			"label": splits[0],
-			// 'detail': capitalizeFirstLetter(splits[1])
-			"detail": splits[1]
-		});
-	});
-	return specItems;
-}
-
-export function getKeyFromValue(value: Record<string, any>, arr: any) {
-	return Object.keys(arr).find(key => arr[key] === value);
-}
-
