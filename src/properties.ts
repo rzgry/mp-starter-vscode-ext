@@ -1,3 +1,4 @@
+/* eslint-disable */
 const mpVersions = {
     MP32: 'version 3.2',
     MP30: 'version 3.0',
@@ -19,4 +20,4 @@ const mpServers = {
     WILDFLY_SWARM: 'WildFly Swarm'
 };
 
-module.exports = {mpVersions, mpServers};
+module.exports = { mpVersions, mpServers };

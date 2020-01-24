@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as vscode from 'vscode';
 let properties = require('../properties');
 import {

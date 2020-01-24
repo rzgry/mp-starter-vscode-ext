@@ -1,67 +1,68 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 import {
-    OpenDialogOptions,
-    Uri,
-    window
+	OpenDialogOptions,
+	Uri,
+	window
 } from "vscode";
 
-let properties = require('../properties');
+const properties = require("../properties");
 
 export async function openDialogForFolder(customOptions: OpenDialogOptions): Promise<Uri | undefined> {
-    const options: OpenDialogOptions = {
-        canSelectFiles: false,
-        canSelectFolders: true,
-        canSelectMany: false,
-    };
-    const result = await window.showOpenDialog(Object.assign(options, customOptions));
-    if (result && result.length) {
-        return Promise.resolve(result[0]);
-    } else {
-        return Promise.resolve(undefined);
-    }
+	const options: OpenDialogOptions = {
+		canSelectFiles: false,
+		canSelectFolders: true,
+		canSelectMany: false,
+	};
+	const result = await window.showOpenDialog(Object.assign(options, customOptions));
+
+	if (result && result.length > 0) {
+		return result[0];
+	}
+
+	return undefined;
 }
 
-export async function mapToPropertiesFile(arrayName : string, originalArray : string[]) {
-	var mappedArray : string[] = new Array();
-	mappedArray =  originalArray.map(function (elem) {
+export async function mapToPropertiesFile(arrayName: string, originalArray: string[]) {
+	let mappedArray: string[] = [];
+	mappedArray = originalArray.map(function (elem) {
 		return properties[arrayName][elem];
 	});
 	mappedArray.sort().reverse();
 	return mappedArray;
 }
 
-function capitalizeFirstLetter(newString :string) {
-    return newString.charAt(0).toUpperCase() + newString.slice(1);
+function capitalizeFirstLetter(newString: string) {
+	return newString.charAt(0).toUpperCase() + newString.slice(1);
 }
 
-export async function mapToDescription(prevArray : string[], descriptions: Object) {
-	var specItems : vscode.QuickPickItem[] = new Array();
+export async function mapToDescription(prevArray: string[], descriptions: Record<string, any>) {
+	const specItems: vscode.QuickPickItem[] = [];
 	prevArray.forEach(element => {
-		var content = descriptions[element as keyof typeof descriptions];
-		var contentStr = new String(content);
+		const content = descriptions[element as keyof typeof descriptions];
+		const contentStr = new String(content);
 
-		var splits = contentStr.split(" - ");
+		const splits = contentStr.split(" - ");
 		specItems.push({
-			'label': splits[0],
+			"label": splits[0],
 			// 'detail': capitalizeFirstLetter(splits[1])
-			'detail': splits[1]
+			"detail": splits[1]
 		});
 	});
 	return specItems;
 }
 
-export function getKeyFromValue(value: Object, arr : any) {
+export function getKeyFromValue(value: Record<string, any>, arr: any) {
 	return Object.keys(arr).find(key => arr[key] === value);
 }
 
 
-export async function resolveSpecs(specifications : String[], descriptions: Object){
-	var dataString: String = "";
+export async function resolveSpecs(specifications: string[], descriptions: Record<string, any>) {
+	let dataString = "";
 	if (specifications !== undefined && specifications.length > 0) {
 		dataString += ', "selectedSpecs":[';
 		specifications.forEach(async element => {
-			var apiSpec;
-			if (element === specifications[0]){
+			let apiSpec;
+			if (element === specifications[0]) {
 				apiSpec = getKeyFromValue(element, descriptions);
 				dataString = dataString + '"' + apiSpec + '"';
 			} else {
@@ -69,7 +70,7 @@ export async function resolveSpecs(specifications : String[], descriptions: Obje
 				dataString += ', "' + apiSpec + '"';
 			}
 		});
-		dataString = dataString + ']';
+		dataString = dataString + "]";
 	}
 	return dataString;
 }
