@@ -5,8 +5,6 @@ import {
 	window
 } from "vscode";
 
-const properties = require("../properties");
-
 export async function openDialogForFolder(customOptions: OpenDialogOptions): Promise<Uri | undefined> {
 	const options: OpenDialogOptions = {
 		canSelectFiles: false,
@@ -22,14 +20,14 @@ export async function openDialogForFolder(customOptions: OpenDialogOptions): Pro
 	return undefined;
 }
 
-export async function mapToPropertiesFile(arrayName: string, originalArray: string[]) {
-	let mappedArray: string[] = [];
-	mappedArray = originalArray.map(function (elem) {
-		return properties[arrayName][elem];
-	});
-	mappedArray.sort().reverse();
-	return mappedArray;
-}
+// export async function mapToPropertiesFile(arrayName: string, originalArray: string[]) {
+// 	let mappedArray: string[] = [];
+// 	mappedArray = originalArray.map(function (elem) {
+// 		return properties[arrayName][elem];
+// 	});
+// 	mappedArray.sort().reverse();
+// 	return mappedArray;
+// }
 
 function capitalizeFirstLetter(newString: string) {
 	return newString.charAt(0).toUpperCase() + newString.slice(1);
@@ -55,22 +53,3 @@ export function getKeyFromValue(value: Record<string, any>, arr: any) {
 	return Object.keys(arr).find(key => arr[key] === value);
 }
 
-
-export async function resolveSpecs(specifications: string[], descriptions: Record<string, any>) {
-	let dataString = "";
-	if (specifications !== undefined && specifications.length > 0) {
-		dataString += ', "selectedSpecs":[';
-		specifications.forEach(async element => {
-			let apiSpec;
-			if (element === specifications[0]) {
-				apiSpec = getKeyFromValue(element, descriptions);
-				dataString = dataString + '"' + apiSpec + '"';
-			} else {
-				apiSpec = getKeyFromValue(element, descriptions);
-				dataString += ', "' + apiSpec + '"';
-			}
-		});
-		dataString = dataString + "]";
-	}
-	return dataString;
-}

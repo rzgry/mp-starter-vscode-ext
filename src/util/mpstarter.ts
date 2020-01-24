@@ -3,6 +3,7 @@ import * as rp from "request-promise";
 import * as request from "request";
 import * as fs from "fs";
 import { openDialogForFolder } from "./util";
+import * as extract from "extract-zip";
 
 async function askForGroupID(): Promise<string | undefined> {
   return await vscode.window.showInputBox({
@@ -216,6 +217,8 @@ export async function generateProject(): Promise<void> {
       selectedSpecs: mpSpecifications,
     };
 
+    const zipPath = targetDirString + "/" + artifactId + ".zip";
+
     const requestOptions = {
       url: "https://start.microprofile.io/api/2/project",
       method: "POST",
@@ -225,7 +228,24 @@ export async function generateProject(): Promise<void> {
       body: JSON.stringify(payload),
     };
 
-    console.log(requestOptions);
+    request(requestOptions, (err) => {
+      if (!err) {
+        extract(zipPath, { dir: targetDirString }, async function (err: any) {
+          // extraction is complete
+          if (err !== undefined) {
+            vscode.window.showErrorMessage("Could not extract the MicroProfile starter project.");
+          } else {
+            // open the unzipped folder in a new VS Code window
+            const uri = vscode.Uri.file(targetDirString + "/" + artifactId);
+            const openInNewWindow = vscode.workspace.workspaceFolders !== undefined;
+            await vscode.commands.executeCommand("vscode.openFolder", uri, openInNewWindow);
+          }
+
+        });
+      } else {
+        vscode.window.showErrorMessage("Could not generate an MicroProfile starter project.");
+      }
+    }).pipe(fs.createWriteStream(zipPath));
 
   } catch (e) {
     console.error(e);
