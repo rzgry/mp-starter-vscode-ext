@@ -63,6 +63,7 @@ export async function askForMPVersion(mpVersions: string[]): Promise<string | un
 
 	const mpVersionOptions: MPVersionOption[] = [];
 	for (const mpVersion of mpVersions) {
+		// if we have a label defined for the given MP version shortname add it to the options array
 		if (MP_VERSION_LABELS[mpVersion] != null) {
 			mpVersionOptions.push({
 				label: MP_VERSION_LABELS[mpVersion],
@@ -91,6 +92,7 @@ export async function askForMPserver(mpServers: string[]): Promise<string | unde
 
 	const mpServerOptions: MPServerOption[] = [];
 	for (const mpServer of mpServers) {
+		// if we have a server label for the given mp server shortname add it to the options array
 		if (MP_SERVER_LABELS[mpServer] != null) {
 			mpServerOptions.push({
 				label: MP_SERVER_LABELS[mpServer],

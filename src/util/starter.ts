@@ -9,7 +9,6 @@ export async function generateProject(): Promise<void> {
     if (mpSupportResponse.status >= 400 && mpSupportResponse.status < 600) {
       throw new Error(`Bad response from server ${mpSupportResponse.status}: ${mpSupportResponse.statusText}`);
     }
-    
     const mpSupportMatrix = await mpSupportResponse.json();
 
     // mpConfigurations is a map of mp version -> mp configuration
@@ -86,7 +85,8 @@ export async function generateProject(): Promise<void> {
 
     extract(zipPath, { dir: targetDirString }, async function (err: any) {
       if (err !== undefined) {
-        vscode.window.showErrorMessage("Could not extract the MicroProfile starter project.");
+        console.error(err);
+        vscode.window.showErrorMessage("Failed to extract the MicroProfile starter project.");
       } else {
         // open the unzipped folder in a new VS Code window
         const uri = vscode.Uri.file(targetDirString + "/" + artifactId);
