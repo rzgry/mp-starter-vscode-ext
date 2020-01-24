@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
+import fetch from "node-fetch";
 import {
 	OpenDialogOptions,
 	Uri,
@@ -6,7 +8,6 @@ import {
 	QuickPickItem
 } from "vscode";
 import { MP_SERVER_LABELS, MP_VERSION_LABELS } from "../properties";
-
 
 export async function askForGroupID(): Promise<string | undefined> {
 	return await vscode.window.showInputBox({
@@ -150,6 +151,34 @@ export async function askForFolder(customOptions: OpenDialogOptions): Promise<Ur
 	}
 
 	return undefined;
+}
+
+interface RequestOptions {
+	url: string;
+}
+
+// Downloads a file using streams to avoid loading entire file into memowry
+export async function downloadFile(requestOptions: RequestOptions, downloadLocation: string): Promise<void> {
+	const {
+		url,
+		...options
+	} = requestOptions;
+	const res = await fetch(url, options);
+	if (res.status >= 400 && res.status < 600) {
+		throw new Error(`Bad response from server ${res.status}: ${res.statusText}`);
+	}
+	const fileWriteStream = fs.createWriteStream(downloadLocation);
+	return new Promise((resolve, reject) => {
+		res.body.pipe(fileWriteStream);
+		// error writing the file, reject promise
+		fileWriteStream.on("error", (err) => {
+			reject(err);
+		});
+		// file writing completed, resolve promise
+		fileWriteStream.on("finish", function () {
+			resolve();
+		});
+	});
 }
 
 export function capitalizeFirstLetter(newString: string): string {
