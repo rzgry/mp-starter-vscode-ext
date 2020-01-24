@@ -2,138 +2,8 @@ import * as vscode from "vscode";
 import * as rp from "request-promise";
 import * as request from "request";
 import * as fs from "fs";
-import { openDialogForFolder } from "./util";
 import * as extract from "extract-zip";
-import { MP_SERVER_LABELS, MP_VERSION_LABELS } from "../properties";
-
-async function askForGroupID(): Promise<string | undefined> {
-  return await vscode.window.showInputBox({
-    placeHolder: "e.g. com.example",
-    prompt: "Specify a Group Id for your project.",
-    value: "com.example",
-    ignoreFocusOut: true,
-    validateInput: (value: string) => {
-      if (value.trim().length === 0) {
-        return "Group Id is required";
-      }
-      if (value.indexOf(" ") >= 0) {
-        return "Group Id cannot contain a blank space";
-      }
-      return null;
-    },
-  });
-}
-
-async function askForArtifactID(): Promise<string | undefined> {
-  return await vscode.window.showInputBox({
-    placeHolder: "demo",
-    prompt: "Specify an Artifact Id for your project.",
-    value: "demo",
-    ignoreFocusOut: true,
-    validateInput: (value: string) => {
-      if (value.trim().length === 0) {
-        return "Artifact Id is required";
-      }
-      if (value.indexOf(" ") >= 0) {
-        return "Artifact Id cannot contain a blank space";
-      }
-      return null;
-    },
-  });
-}
-
-
-async function askForJavaSEVersion(): Promise<string | undefined> {
-  const SUPPORTED_JAVA_SE_VERSIONS = ["SE8"];
-
-  return await vscode.window.showQuickPick(
-    SUPPORTED_JAVA_SE_VERSIONS,
-    { ignoreFocusOut: true, placeHolder: "Select a Java SE version." },
-  );
-}
-
-async function askForMPVersion(mpVersions: string[]): Promise<string | undefined> {
-  interface MPVersionOption extends vscode.QuickPickItem {
-    label: string; // label is the long-name that is displaed in vscode
-    version: string; // version is the shortname that is used internally by the microprofile starter api
-  }
-
-  const mpVersionOptions: MPVersionOption[] = [];
-  for (const mpVersion of mpVersions) {
-    if (MP_VERSION_LABELS[mpVersion] != null) {
-      mpVersionOptions.push({
-        label: MP_VERSION_LABELS[mpVersion],
-        version: mpVersion
-      });
-    }
-  }
-
-  const mpVersionQuickPickResult = await vscode.window.showQuickPick(
-    mpVersionOptions,
-    { ignoreFocusOut: true, placeHolder: "Select a MicroProfile version." },
-  );
-
-  if (mpVersionQuickPickResult != null) {
-    return mpVersionQuickPickResult.version;
-  }
-
-  return undefined;
-}
-
-async function askForMPserver(mpServers: string[]): Promise<string | undefined> {
-  interface MPServerOption extends vscode.QuickPickItem {
-    label: string; // label is the long-name that is displaed in vscode
-    server: string; // server is the shortname that is used internally by the microprofile starter api
-  }
-
-  const mpServerOptions: MPServerOption[] = [];
-  for (const mpServer of mpServers) {
-    if (MP_SERVER_LABELS[mpServer] != null) {
-      mpServerOptions.push({
-        label: MP_SERVER_LABELS[mpServer],
-        server: mpServer
-      });
-    }
-  }
-
-  const mpVersionQuickPickResult = await vscode.window.showQuickPick(
-    mpServerOptions,
-    { ignoreFocusOut: true, placeHolder: "Select a MicroProfile server." },
-  );
-
-  if (mpVersionQuickPickResult != null) {
-    return mpVersionQuickPickResult.server;
-  }
-  return undefined;
-}
-
-async function askForMPSpecifications(specs: string[], specDescriptions: Record<string, string>): Promise<Array<string> | undefined> {
-  interface MPSpecOption extends vscode.QuickPickItem {
-    spec: string;
-    label: string;
-    detail: string;
-  }
-
-  const mpSpecOptions: MPSpecOption[] = specs.map(spec => {
-    const fullDescriptionString = specDescriptions[spec];
-    const [name, desc] = fullDescriptionString.split("-");
-    return {
-      spec: spec,
-      label: name,
-      detail: desc,
-    };
-  });
-
-  const specResults: MPSpecOption[] | undefined = await vscode.window.showQuickPick(
-    mpSpecOptions,
-    { ignoreFocusOut: true, canPickMany: true, placeHolder: "Select MicroProfile specifications." },
-  );
-
-  if (specResults != null) {
-    return specResults.map(result => result.spec);
-  }
-  return undefined;
-}
+import * as util from "./util";
 
 export async function generateProject(): Promise<void> {
   try {
@@ -144,29 +14,29 @@ export async function generateProject(): Promise<void> {
     const mpConfigurations = mpSupportMatrix.configs;
     const allMpVersions = Object.keys(mpConfigurations);
 
-    const groupId = await askForGroupID();
+    const groupId = await util.askForGroupID();
     if (groupId === undefined) {
       return;
     }
 
-    const artifactId = await askForArtifactID();
+    const artifactId = await util.askForArtifactID();
     if (artifactId === undefined) {
       return;
     }
 
-    const javaSEVersion = await askForJavaSEVersion();
+    const javaSEVersion = await util.askForJavaSEVersion();
     if (javaSEVersion === undefined) {
       return;
     }
 
-    const mpVersion = await askForMPVersion(allMpVersions);
+    const mpVersion = await util.askForMPVersion(allMpVersions);
     if (mpVersion === undefined) {
       return;
     }
 
-    const allMpServers = mpConfigurations[mpVersion].supportedServers;
+    const allMpServersForVersion = mpConfigurations[mpVersion].supportedServers;
 
-    const mpServer = await askForMPserver(allMpServers);
+    const mpServer = await util.askForMPserver(allMpServersForVersion);
     if (mpServer === undefined) {
       return;
     }
@@ -175,12 +45,12 @@ export async function generateProject(): Promise<void> {
     const allSupportedSpecs = mpConfigurations[mpVersion].specs;
     const specDescriptions = mpSupportMatrix.descriptions;
 
-    const mpSpecifications = await askForMPSpecifications(allSupportedSpecs, specDescriptions);
+    const mpSpecifications = await util.askForMPSpecifications(allSupportedSpecs, specDescriptions);
     if (mpSpecifications === undefined) {
       return;
     }
 
-    const targetFolder = await openDialogForFolder({ openLabel: "Generate into this folder" });
+    const targetFolder = await util.askForFolder({ openLabel: "Generate into this folder" });
     if (targetFolder === undefined) {
       return;
     }
@@ -196,6 +66,7 @@ export async function generateProject(): Promise<void> {
       selectedSpecs: mpSpecifications,
     };
 
+    // location to download the zip file
     const zipPath = targetDirString + "/" + artifactId + ".zip";
 
     const requestOptions = {
@@ -207,7 +78,9 @@ export async function generateProject(): Promise<void> {
       body: JSON.stringify(payload),
     };
 
-    request(requestOptions, (err) => {
+    // request-promise recommends to use the standard request library when streaming the response
+    request(requestOptions, (err, body) => {
+      console.log(body);
       if (!err) {
         extract(zipPath, { dir: targetDirString }, async function (err: any) {
           // extraction is complete
