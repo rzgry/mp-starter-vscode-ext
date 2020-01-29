@@ -1,7 +1,7 @@
 language: node_js
 os:
   - linux
-node_js: 12
+node_js: lts/*
 
 # xvfb setup script for Linux that is necessary to run VS Code in headless Linux CI machines
 before_install:
